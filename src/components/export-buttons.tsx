@@ -54,9 +54,8 @@ export function ExportButtons() {
       for (let i = 0; i < chartElements.length; i++) {
         const element = chartElements[i] as HTMLElement
         const canvas = await html2canvas.default(element, {
-          backgroundColor: '#ffffff',
-          scale: 2
-        })
+          background: '#ffffff'
+        } as any)
         
         // Converter para blob e fazer download
         canvas.toBlob((blob) => {

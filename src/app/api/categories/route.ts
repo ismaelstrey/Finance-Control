@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     console.error('Erro ao criar categoria:', error);
     
     // Verificar se é erro de duplicata
-    if (error.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Já existe uma categoria com este nome' },
         { status: 409 }

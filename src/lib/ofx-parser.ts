@@ -1,4 +1,4 @@
-// @ts-ignore: Missing type definitions for ofx-js
+// @ts-expect-error - ofx-js não tem tipos TypeScript disponíveis
 import { parse } from 'ofx-js';
 
 export interface OFXTransaction {
