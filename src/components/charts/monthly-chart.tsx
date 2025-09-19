@@ -26,15 +26,22 @@ export function MonthlyChart() {
       const result = await response.json()
       
       if (response.ok) {
+interface MonthlyStatItem {
+  month: string
+  income: string | number
+  expense: string | number
+  transaction_count: number
+}
+
         // Processar dados mensais
-        const monthlyData = result.monthlyStats.map((item: any) => ({
+        const monthlyData = result.monthlyStats.map((item: MonthlyStatItem) => ({
           month: new Date(item.month).toLocaleDateString('pt-BR', { 
             month: 'short', 
             year: '2-digit' 
           }),
-          income: parseFloat(item.income) || 0,
-          expenses: parseFloat(item.expenses) || 0,
-          transaction_count: parseInt(item.transaction_count) || 0
+          income: parseFloat(String(item.income)) || 0,
+          expenses: parseFloat(String(item.expense)) || 0,
+          transaction_count: parseInt(String(item.transaction_count)) || 0
         })).reverse() // Reverter para mostrar do mais antigo para o mais recente
         
         setData(monthlyData)
@@ -46,12 +53,31 @@ export function MonthlyChart() {
     }
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipProps {
+  active?: boolean
+  payload?: Array<{
+    name: string
+    value: number
+    color: string
+    payload?: {
+      transaction_count?: number
+    }
+  }>
+  label?: string
+}
+
+interface PayloadEntry {
+  name: string
+  value: number
+  color: string
+}
+
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border rounded-lg p-3 shadow-lg">
           <p className="font-medium mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: PayloadEntry, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>

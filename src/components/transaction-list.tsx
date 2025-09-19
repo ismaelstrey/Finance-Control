@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +38,7 @@ export function TransactionList({ refreshTrigger, filters }: TransactionListProp
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  const fetchTransactions = async (page = 1) => {
+  const fetchTransactions = useCallback(async (page = 1) => {
     try {
       setLoading(true)
       
@@ -59,21 +59,21 @@ export function TransactionList({ refreshTrigger, filters }: TransactionListProp
       const response = await fetch(`/api/transactions?${params.toString()}`)
       const data = await response.json()
       
-      if (response.ok) {
+      if (data.success) {
         setTransactions(data.transactions)
-        setTotalPages(data.pagination.totalPages)
-        setCurrentPage(page)
+        setCurrentPage(data.currentPage)
+        setTotalPages(data.totalPages)
       }
     } catch (error) {
       console.error('Erro ao buscar transações:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters])
 
   useEffect(() => {
     fetchTransactions(1)
-  }, [refreshTrigger, filters])
+  }, [refreshTrigger, fetchTransactions])
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {

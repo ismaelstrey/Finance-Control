@@ -55,7 +55,7 @@ export function ExportButtons() {
         const element = chartElements[i] as HTMLElement
         const canvas = await html2canvas.default(element, {
           background: '#ffffff'
-        } as any)
+        })
         
         // Converter para blob e fazer download
         canvas.toBlob((blob) => {
@@ -120,7 +120,7 @@ export function ExportButtons() {
             variant="outline"
             className="w-full"
           >
-            <Image className="w-4 h-4 mr-2" />
+            <Image className="w-4 h-4 mr-2" aria-label="Ícone de imagem" />
             Gráficos PNG
           </Button>
         </div>

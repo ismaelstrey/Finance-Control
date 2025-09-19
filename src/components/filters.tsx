@@ -56,11 +56,11 @@ export function Filters({ onFiltersChange }: FiltersProps) {
 
   useEffect(() => {
     fetchCategories()
-  })
+  }, [])
 
   useEffect(() => {
     onFiltersChange(filters)
-  }, [filters])
+  }, [filters, onFiltersChange])
 
 
 

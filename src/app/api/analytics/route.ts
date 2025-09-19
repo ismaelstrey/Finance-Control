@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
 
     // Construir filtros de data
-    const dateFilter: any = {};
+    const dateFilter: { gte?: Date; lte?: Date } = {};
     if (startDate) {
       dateFilter.gte = new Date(startDate);
     }
@@ -98,7 +98,12 @@ export async function GET(request: NextRequest) {
     const balance = (totalIncome._sum.amount || 0) + (totalExpenses._sum.amount || 0);
 
     // Converter BigInt para Number para evitar erro de serialização
-    const processMonthlyStats = (stats: any[]) => {
+    const processMonthlyStats = (stats: Array<{
+      month: string;
+      income: bigint | null;
+      expenses: bigint | null;
+      transaction_count: bigint;
+    }>) => {
       return stats.map(stat => ({
         month: stat.month,
         income: Number(stat.income || 0),
@@ -119,7 +124,12 @@ export async function GET(request: NextRequest) {
         totalAmount: Number(stat.totalAmount),
         transactionCount: Number(stat.transactionCount)
       })),
-      monthlyStats: processMonthlyStats(monthlyStats as any[]),
+      monthlyStats: processMonthlyStats(monthlyStats as Array<{
+        month: string;
+        income: bigint | null;
+        expenses: bigint | null;
+        transaction_count: bigint;
+      }>),
       recentTransactions: recentTransactions.map(transaction => ({
         ...transaction,
         amount: Number(transaction.amount)

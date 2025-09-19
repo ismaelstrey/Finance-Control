@@ -10,7 +10,10 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('categoryId');
     
     // Construir filtros
-    const where: any = {};
+    const where: {
+      categoryId?: string;
+      date?: { gte?: Date; lte?: Date };
+    } = {};
     
     if (categoryId && categoryId !== 'all') {
       where.categoryId = categoryId;

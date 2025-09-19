@@ -22,7 +22,7 @@ export function parseOFXFile(ofxContent: string): ParsedOFXData {
     let data;
     try {
       data = parse(ofxContent);
-    } catch (error) {
+    } catch {
       data = parseOFXCustom(ofxContent);
     }
 
@@ -89,7 +89,7 @@ function parseOFXDate(dateString: string): Date {
 }
 
 // Parser customizado para arquivos OFX do Nubank
-function parseOFXCustom(ofxContent: string): any {
+function parseOFXCustom(ofxContent: string): ParsedOFXData {
   // Remove headers OFX
   const xmlContent = ofxContent.substring(ofxContent.indexOf('<OFX>'));
 
@@ -105,7 +105,7 @@ function parseOFXCustom(ofxContent: string): any {
 
   // Extrai todas as transações
   const transactionRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/g;
-  const transactions = [];
+  const transactions: OFXTransaction[] = [];
   let match;
 
   while ((match = transactionRegex.exec(xmlContent)) !== null) {
@@ -119,35 +119,21 @@ function parseOFXCustom(ofxContent: string): any {
 
     if (fitIdMatch && trnAmtMatch && dtPostedMatch) {
       transactions.push({
-        TRNTYPE: trnTypeMatch ? trnTypeMatch[1] : 'OTHER',
-        DTPOSTED: dtPostedMatch[1],
-        TRNAMT: trnAmtMatch[1],
-        FITID: fitIdMatch[1],
-        MEMO: memoMatch ? memoMatch[1] : 'Sem descrição'
+        fitId: fitIdMatch[1],
+        date: new Date(dtPostedMatch[1].substring(0, 4) + '-' + dtPostedMatch[1].substring(4, 6) + '-' + dtPostedMatch[1].substring(6, 8)),
+        description: memoMatch ? memoMatch[1] : 'Sem descrição',
+        amount: parseFloat(trnAmtMatch[1]),
+        type: trnTypeMatch ? trnTypeMatch[1] : 'OTHER'
       });
     }
   }
 
   // Retorna estrutura compatível
   return {
-    OFX: {
-      CREDITCARDMSGSRSV1: {
-        CCSTMTTRNRS: {
-          CCSTMTRS: {
-            CCACCTFROM: {
-              ACCTID: accountId
-            },
-            BANKTRANLIST: {
-              STMTTRN: transactions
-            },
-            LEDGERBAL: {
-              BALAMT: balance.toString(),
-              DTASOF: balanceDate
-            }
-          }
-        }
-      }
-    }
+    transactions,
+    accountId,
+    balance,
+    balanceDate: new Date(balanceDate)
   };
 }
 

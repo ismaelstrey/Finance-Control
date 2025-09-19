@@ -47,7 +47,7 @@ export function FileUpload({ onUploadSuccess }: FileUploadProps) {
         setUploadStatus('error')
         setUploadMessage(result.error || 'Erro ao processar o arquivo')
       }
-    } catch (error) {
+    } catch {
       setUploadStatus('error')
       setUploadMessage('Erro de conexão. Tente novamente.')
     } finally {

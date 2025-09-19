@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { TrendingUp, TrendingDown, DollarSign, Activity } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Activity, LucideIcon } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 
 interface DashboardStats {
@@ -14,6 +14,14 @@ interface DashboardStats {
 
 interface DashboardStatsProps {
   refreshTrigger?: number
+}
+
+interface StatCardProps {
+  title: string
+  value: string | number
+  icon: LucideIcon
+  color: string
+  description: string
 }
 
 export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
@@ -50,13 +58,7 @@ export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
     icon: Icon, 
     color, 
     description 
-  }: {
-    title: string
-    value: string | number
-    icon: any
-    color: string
-    description: string
-  }) => (
+  }: StatCardProps) => (
     <Card className="hover:shadow-lg transition-all duration-200 hover:scale-105">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">

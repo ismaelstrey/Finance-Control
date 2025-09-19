@@ -15,7 +15,12 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     
     // Construir filtros
-    const where: any = {};
+    const where: {
+      categoryId?: string;
+      date?: { gte?: Date; lte?: Date };
+      type?: string;
+      description?: { contains: string; mode: 'insensitive' };
+    } = {};
     
     if (categoryId && categoryId !== 'all') {
       where.categoryId = categoryId;

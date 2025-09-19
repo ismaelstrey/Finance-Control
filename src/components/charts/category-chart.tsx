@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/lib/utils'
 
@@ -9,7 +9,7 @@ interface CategoryData {
   categoryName: string
   totalAmount: number
   transactionCount: number
-  [key: string]: any // Adiciona index signature para compatibilidade com recharts
+  [key: string]: string | number // Adiciona index signature para compatibilidade com recharts
 }
 
 const COLORS = [
@@ -57,7 +57,14 @@ export function CategoryChart() {
     }
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
+interface TooltipProps {
+  active?: boolean
+  payload?: Array<{
+    payload: CategoryData
+  }>
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
@@ -122,10 +129,6 @@ export function CategoryChart() {
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="totalAmount"
-                label={(props: any) => {
-                  const { categoryName, percent } = props;
-                  return `${categoryName} ${(percent * 100).toFixed(0)}%`;
-                }}
               >
                 {data.map((entry, index) => (
                   <Cell 

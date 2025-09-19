@@ -104,10 +104,10 @@ export function CategoryList({ categories, loading, onEdit, onDelete }: Category
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir Categoria</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Tem certeza que deseja excluir a categoria "{category.name}"?
+                        Tem certeza que deseja excluir a categoria &quot;{category.name}&quot;?
                         {category._count && category._count.transactions > 0 && (
                           <span className="block mt-2 text-destructive">
-                            Esta categoria possui {category._count.transactions} transação(ões) associada(s).
+                            Esta categoria possui {category._count.transactions} transações associadas.
                           </span>
                         )}
                       </AlertDialogDescription>
@@ -134,7 +134,7 @@ export function CategoryList({ categories, loading, onEdit, onDelete }: Category
             )}
             <div className="flex items-center justify-between">
               <Badge variant="secondary" className="text-xs">
-                {category._count?.transactions || 0} transação(ões)
+                {category._count?.transactions || 0} transações
               </Badge>
               <div className="text-xs text-muted-foreground">
                 ID: {category.id.slice(0, 8)}...
