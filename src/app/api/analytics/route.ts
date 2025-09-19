@@ -97,16 +97,33 @@ export async function GET(request: NextRequest) {
     // Calcular saldo atual
     const balance = (totalIncome._sum.amount || 0) + (totalExpenses._sum.amount || 0);
     
+    // Converter BigInt para Number para evitar erro de serialização
+    const processMonthlyStats = (stats: any[]) => {
+      return stats.map(stat => ({
+        month: stat.month,
+        income: Number(stat.income || 0),
+        expenses: Number(stat.expenses || 0),
+        transactionCount: Number(stat.transaction_count || 0)
+      }));
+    };
+    
     return NextResponse.json({
       summary: {
-        totalTransactions,
-        totalIncome: totalIncome._sum.amount || 0,
-        totalExpenses: Math.abs(totalExpenses._sum.amount || 0),
-        balance
+        totalTransactions: Number(totalTransactions),
+        totalIncome: Number(totalIncome._sum.amount || 0),
+        totalExpenses: Math.abs(Number(totalExpenses._sum.amount || 0)),
+        balance: Number(balance)
       },
-      categoryStats: categoryStatsWithNames,
-      monthlyStats,
-      recentTransactions
+      categoryStats: categoryStatsWithNames.map(stat => ({
+        ...stat,
+        totalAmount: Number(stat.totalAmount),
+        transactionCount: Number(stat.transactionCount)
+      })),
+      monthlyStats: processMonthlyStats(monthlyStats),
+      recentTransactions: recentTransactions.map(transaction => ({
+        ...transaction,
+        amount: Number(transaction.amount)
+      }))
     });
     
   } catch (error) {
