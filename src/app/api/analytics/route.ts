@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       // Estatísticas mensais
       prisma.$queryRaw`
         SELECT 
-          DATE_TRUNC('month', date) as month,
+          strftime('%Y-%m-01', date) as month,
           SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as income,
           SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as expenses,
           COUNT(*) as transaction_count
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
           Prisma.sql`WHERE date >= ${dateFilter.gte || new Date('1900-01-01')} 
            AND date <= ${dateFilter.lte || new Date('2100-12-31')}` : 
           Prisma.empty}
-        GROUP BY DATE_TRUNC('month', date)
+        GROUP BY strftime('%Y-%m', date)
         ORDER BY month DESC
         LIMIT 12
       `,

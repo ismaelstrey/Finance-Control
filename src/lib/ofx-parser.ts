@@ -17,12 +17,31 @@ export interface ParsedOFXData {
 
 export function parseOFXFile(ofxContent: string): ParsedOFXData {
   try {
-    const data = parse(ofxContent);
+    console.log('Iniciando parse do arquivo OFX...');
+    
+    // Primeiro tenta usar a biblioteca ofx-js
+    let data;
+    try {
+      data = parse(ofxContent);
+      console.log('Parse com ofx-js concluído, estrutura:', JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.log('Erro no parse com ofx-js, tentando parser customizado:', error);
+      data = parseOFXCustom(ofxContent);
+      console.log('Parse customizado concluído, estrutura:', JSON.stringify(data, null, 2));
+    }
+    
+    // Se o parse retornou vazio, tenta o parser customizado
+    if (!data || Object.keys(data).length === 0) {
+      console.log('Parse inicial retornou vazio, usando parser customizado...');
+      data = parseOFXCustom(ofxContent);
+      console.log('Parse customizado concluído, estrutura:', JSON.stringify(data, null, 2));
+    }
     
     // Extrair informações da conta
     const accountId = data.OFX?.CREDITCARDMSGSRSV1?.CCSTMTTRNRS?.CCSTMTRS?.CCACCTFROM?.ACCTID || 
                      data.OFX?.BANKMSGSRSV1?.STMTTRNRS?.STMTRS?.BANKACCTFROM?.ACCTID || 
                      'unknown';
+    console.log('Account ID encontrado:', accountId);
     
     // Extrair saldo
     const ledgerBal = data.OFX?.CREDITCARDMSGSRSV1?.CCSTMTTRNRS?.CCSTMTRS?.LEDGERBAL ||
@@ -30,23 +49,43 @@ export function parseOFXFile(ofxContent: string): ParsedOFXData {
     
     const balance = parseFloat(ledgerBal?.BALAMT || '0');
     const balanceDate = parseOFXDate(ledgerBal?.DTASOF || '');
+    console.log('Saldo encontrado:', balance, 'Data:', balanceDate);
     
     // Extrair transações
     const bankTranList = data.OFX?.CREDITCARDMSGSRSV1?.CCSTMTTRNRS?.CCSTMTRS?.BANKTRANLIST ||
                         data.OFX?.BANKMSGSRSV1?.STMTTRNRS?.STMTRS?.BANKTRANLIST;
     
+    console.log('BANKTRANLIST encontrado:', bankTranList);
+    
     const stmtTrns = bankTranList?.STMTTRN || [];
-    const transactionArray = Array.isArray(stmtTrns) ? stmtTrns : [stmtTrns];
+    console.log('STMTTRN raw:', stmtTrns);
+    console.log('É array?', Array.isArray(stmtTrns));
+    console.log('Quantidade de transações raw:', Array.isArray(stmtTrns) ? stmtTrns.length : 1);
+    
+    const transactionArray = Array.isArray(stmtTrns) ? stmtTrns : (stmtTrns ? [stmtTrns] : []);
+    console.log('Array de transações processado:', transactionArray.length, 'itens');
     
     const transactions: OFXTransaction[] = transactionArray
-      .filter(trn => trn && trn.FITID) // Filtrar transações válidas
-      .map(trn => ({
-        fitId: trn.FITID,
-        date: parseOFXDate(trn.DTPOSTED),
-        description: cleanDescription(trn.MEMO || trn.NAME || 'Transação sem descrição'),
-        amount: parseFloat(trn.TRNAMT || '0'),
-        type: trn.TRNTYPE || 'OTHER'
-      }));
+      .filter(trn => {
+        const isValid = trn && trn.FITID;
+        if (!isValid) {
+          console.log('Transação inválida filtrada:', trn);
+        }
+        return isValid;
+      })
+      .map(trn => {
+        const transaction = {
+          fitId: trn.FITID,
+          date: parseOFXDate(trn.DTPOSTED),
+          description: cleanDescription(trn.MEMO || trn.NAME || 'Transação sem descrição'),
+          amount: parseFloat(trn.TRNAMT || '0'),
+          type: trn.TRNTYPE || 'OTHER'
+        };
+        console.log('Transação processada:', transaction);
+        return transaction;
+      });
+    
+    console.log('Total de transações processadas:', transactions.length);
     
     return {
       transactions,
@@ -74,6 +113,74 @@ function parseOFXDate(dateString: string): Date {
   const day = parseInt(dateOnly.substring(6, 8));
   
   return new Date(year, month, day);
+}
+
+// Parser customizado para arquivos OFX do Nubank
+function parseOFXCustom(ofxContent: string): any {
+  console.log('Iniciando parser customizado...');
+  
+  // Remove headers OFX
+  const xmlContent = ofxContent.substring(ofxContent.indexOf('<OFX>'));
+  console.log('Conteúdo XML extraído, tamanho:', xmlContent.length);
+  
+  // Extrai informações básicas usando regex
+  const accountIdMatch = xmlContent.match(/<ACCTID>([^<]+)<\/ACCTID>/);
+  const accountId = accountIdMatch ? accountIdMatch[1] : 'unknown';
+  
+  const balanceMatch = xmlContent.match(/<BALAMT>([^<]+)<\/BALAMT>/);
+  const balance = balanceMatch ? parseFloat(balanceMatch[1]) : 0;
+  
+  const balanceDateMatch = xmlContent.match(/<DTASOF>([^<]+)<\/DTASOF>/);
+  const balanceDate = balanceDateMatch ? balanceDateMatch[1] : '';
+  
+  // Extrai todas as transações
+  const transactionRegex = /<STMTTRN>([\s\S]*?)<\/STMTTRN>/g;
+  const transactions = [];
+  let match;
+  
+  while ((match = transactionRegex.exec(xmlContent)) !== null) {
+    const transactionXml = match[1];
+    
+    const trnTypeMatch = transactionXml.match(/<TRNTYPE>([^<]+)<\/TRNTYPE>/);
+    const dtPostedMatch = transactionXml.match(/<DTPOSTED>([^<]+)<\/DTPOSTED>/);
+    const trnAmtMatch = transactionXml.match(/<TRNAMT>([^<]+)<\/TRNAMT>/);
+    const fitIdMatch = transactionXml.match(/<FITID>([^<]+)<\/FITID>/);
+    const memoMatch = transactionXml.match(/<MEMO>([^<]+)<\/MEMO>/);
+    
+    if (fitIdMatch && trnAmtMatch && dtPostedMatch) {
+      transactions.push({
+        TRNTYPE: trnTypeMatch ? trnTypeMatch[1] : 'OTHER',
+        DTPOSTED: dtPostedMatch[1],
+        TRNAMT: trnAmtMatch[1],
+        FITID: fitIdMatch[1],
+        MEMO: memoMatch ? memoMatch[1] : 'Sem descrição'
+      });
+    }
+  }
+  
+  console.log('Parser customizado encontrou', transactions.length, 'transações');
+  
+  // Retorna estrutura compatível
+  return {
+    OFX: {
+      CREDITCARDMSGSRSV1: {
+        CCSTMTTRNRS: {
+          CCSTMTRS: {
+            CCACCTFROM: {
+              ACCTID: accountId
+            },
+            BANKTRANLIST: {
+              STMTTRN: transactions
+            },
+            LEDGERBAL: {
+              BALAMT: balance.toString(),
+              DTASOF: balanceDate
+            }
+          }
+        }
+      }
+    }
+  };
 }
 
 function cleanDescription(description: string): string {
