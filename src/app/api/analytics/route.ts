@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    
+
     // Construir filtros de data
     const dateFilter: any = {};
     if (startDate) {
@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
     if (endDate) {
       dateFilter.lte = new Date(endDate);
     }
-    
+
     const where = Object.keys(dateFilter).length > 0 ? { date: dateFilter } : {};
-    
+
     // Buscar dados analíticos
     const [
       totalTransactions,
@@ -30,19 +30,19 @@ export async function GET(request: NextRequest) {
     ] = await Promise.all([
       // Total de transações
       prisma.transaction.count({ where }),
-      
+
       // Total de receitas
       prisma.transaction.aggregate({
         where: { ...where, amount: { gt: 0 } },
         _sum: { amount: true }
       }),
-      
+
       // Total de despesas
       prisma.transaction.aggregate({
         where: { ...where, amount: { lt: 0 } },
         _sum: { amount: true }
       }),
-      
+
       // Estatísticas por categoria
       prisma.transaction.groupBy({
         by: ['categoryId'],
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         _sum: { amount: true },
         _count: true
       }),
-      
+
       // Estatísticas mensais
       prisma.$queryRaw`
         SELECT 
@@ -59,15 +59,15 @@ export async function GET(request: NextRequest) {
           SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as expenses,
           COUNT(*) as transaction_count
         FROM transactions 
-        ${Object.keys(dateFilter).length > 0 ? 
+        ${Object.keys(dateFilter).length > 0 ?
           Prisma.sql`WHERE date >= ${dateFilter.gte || new Date('1900-01-01')} 
-           AND date <= ${dateFilter.lte || new Date('2100-12-31')}` : 
+           AND date <= ${dateFilter.lte || new Date('2100-12-31')}` :
           Prisma.empty}
         GROUP BY strftime('%Y-%m', date)
         ORDER BY month DESC
         LIMIT 12
       `,
-      
+
       // Transações recentes
       prisma.transaction.findMany({
         where,
@@ -76,11 +76,11 @@ export async function GET(request: NextRequest) {
         take: 10
       })
     ]);
-    
+
     // Buscar informações das categorias
     const categories = await prisma.category.findMany();
     const categoryMap = new Map(categories.map(cat => [cat.id, cat.name]));
-    
+
     // Processar estatísticas por categoria
     const categoryStatsWithNames = await Promise.all(
       categoryStats.map(async (stat) => {
@@ -93,10 +93,10 @@ export async function GET(request: NextRequest) {
         };
       })
     );
-    
+
     // Calcular saldo atual
     const balance = (totalIncome._sum.amount || 0) + (totalExpenses._sum.amount || 0);
-    
+
     // Converter BigInt para Number para evitar erro de serialização
     const processMonthlyStats = (stats: any[]) => {
       return stats.map(stat => ({
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
         transactionCount: Number(stat.transaction_count || 0)
       }));
     };
-    
+
     return NextResponse.json({
       summary: {
         totalTransactions: Number(totalTransactions),
@@ -119,13 +119,13 @@ export async function GET(request: NextRequest) {
         totalAmount: Number(stat.totalAmount),
         transactionCount: Number(stat.transactionCount)
       })),
-      monthlyStats: processMonthlyStats(monthlyStats),
+      monthlyStats: processMonthlyStats(monthlyStats as any[]),
       recentTransactions: recentTransactions.map(transaction => ({
         ...transaction,
         amount: Number(transaction.amount)
       }))
     });
-    
+
   } catch (error) {
     console.error('Erro ao buscar dados analíticos:', error);
     return NextResponse.json(
