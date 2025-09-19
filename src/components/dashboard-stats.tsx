@@ -13,10 +13,10 @@ interface DashboardStats {
 }
 
 interface DashboardStatsProps {
-  refreshTrigger: number
+  refreshTrigger?: number
 }
 
-export function DashboardStats({ refreshTrigger }: DashboardStatsProps) {
+export function DashboardStats({ refreshTrigger = 0 }: DashboardStatsProps) {
   const [stats, setStats] = useState<DashboardStats>({
     totalTransactions: 0,
     totalIncome: 0,

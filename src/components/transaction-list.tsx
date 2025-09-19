@@ -19,11 +19,20 @@ interface Transaction {
   }
 }
 
-interface TransactionListProps {
-  refreshTrigger: number
+interface FilterState {
+  startDate: string
+  endDate: string
+  category: string
+  type: string
+  description: string
 }
 
-export function TransactionList({ refreshTrigger }: TransactionListProps) {
+interface TransactionListProps {
+  refreshTrigger?: number
+  filters?: FilterState
+}
+
+export function TransactionList({ refreshTrigger, filters }: TransactionListProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
@@ -32,7 +41,22 @@ export function TransactionList({ refreshTrigger }: TransactionListProps) {
   const fetchTransactions = async (page = 1) => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/transactions?page=${page}&limit=20`)
+      
+      // Construir query params com filtros
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '20'
+      })
+      
+      if (filters) {
+        if (filters.startDate) params.append('startDate', filters.startDate)
+        if (filters.endDate) params.append('endDate', filters.endDate)
+        if (filters.category && filters.category !== 'all') params.append('categoryId', filters.category)
+        if (filters.type && filters.type !== 'all') params.append('type', filters.type)
+        if (filters.description) params.append('search', filters.description)
+      }
+      
+      const response = await fetch(`/api/transactions?${params.toString()}`)
       const data = await response.json()
       
       if (response.ok) {
@@ -49,7 +73,7 @@ export function TransactionList({ refreshTrigger }: TransactionListProps) {
 
   useEffect(() => {
     fetchTransactions(1)
-  }, [refreshTrigger])
+  }, [refreshTrigger, filters])
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {

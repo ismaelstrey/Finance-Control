@@ -4,12 +4,19 @@ import { prisma } from '@/lib/prisma';
 export async function GET() {
   try {
     const categories = await prisma.category.findMany({
+      include: {
+        _count: {
+          select: {
+            transactions: true
+          }
+        }
+      },
       orderBy: {
         name: 'asc'
       }
     });
     
-    return NextResponse.json(categories);
+    return NextResponse.json({ categories });
     
   } catch (error) {
     console.error('Erro ao buscar categorias:', error);
@@ -22,7 +29,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name } = await request.json();
+    const { name, description, color } = await request.json();
     
     if (!name || name.trim().length === 0) {
       return NextResponse.json({ error: 'Nome da categoria é obrigatório' }, { status: 400 });
@@ -30,7 +37,9 @@ export async function POST(request: NextRequest) {
     
     const category = await prisma.category.create({
       data: {
-        name: name.trim()
+        name: name.trim(),
+        description: description?.trim() || null,
+        color: color || '#3b82f6'
       }
     });
     

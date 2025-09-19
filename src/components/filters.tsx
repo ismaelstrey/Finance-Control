@@ -11,6 +11,12 @@ import { Filter, X } from 'lucide-react'
 interface Category {
   id: string
   name: string
+  color: string
+  description?: string
+  updatedAt: string
+  _count: {
+    transactions: number
+  }
 }
 
 interface FiltersProps {
@@ -34,19 +40,12 @@ export function Filters({ onFiltersChange }: FiltersProps) {
     type: 'all',
     search: ''
   })
-
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  useEffect(() => {
-    onFiltersChange(filters)
-  }, [filters, onFiltersChange])
-
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/categories')
       const data = await response.json()
+
+
       if (response.ok) {
         setCategories(data)
       }
@@ -54,6 +53,16 @@ export function Filters({ onFiltersChange }: FiltersProps) {
       console.error('Erro ao buscar categorias:', error)
     }
   }
+
+  useEffect(() => {
+    fetchCategories()
+  })
+
+  useEffect(() => {
+    onFiltersChange(filters)
+  }, [filters])
+
+
 
   const updateFilter = (key: keyof FilterState, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -69,7 +78,7 @@ export function Filters({ onFiltersChange }: FiltersProps) {
     })
   }
 
-  const hasActiveFilters = Object.values(filters).some(value => 
+  const hasActiveFilters = Object.values(filters).some(value =>
     value !== '' && value !== 'all'
   )
 
@@ -130,7 +139,7 @@ export function Filters({ onFiltersChange }: FiltersProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as categorias</SelectItem>
-                {categories.map((category) => (
+                {categories && categories.length > 0 && categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>

@@ -1,111 +1,84 @@
-"use client"
+'use client'
 
-import { useState, useCallback } from 'react'
-import { FileUpload } from '@/components/file-upload'
-import { TransactionList } from '@/components/transaction-list'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { DashboardStats } from '@/components/dashboard-stats'
-import { CategoryChart } from '@/components/charts/category-chart'
-import { MonthlyChart } from '@/components/charts/monthly-chart'
-import { ExportButtons } from '@/components/export-buttons'
-import { Filters, FilterState } from '@/components/filters'
-import { DollarSign } from 'lucide-react'
+import { useSession } from '@/lib/auth-client'
+import { LoginButton } from '@/components/auth/login-button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
-export default function Home() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [filters, setFilters] = useState<FilterState>({
-    startDate: '',
-    endDate: '',
-    categoryId: 'all',
-    type: 'all',
-    search: ''
-  })
+export default function HomePage() {
+  const { data: session, isPending } = useSession()
 
-  const handleUploadSuccess = () => {
-    setRefreshTrigger(prev => prev + 1)
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
-  const handleFiltersChange = useCallback((newFilters: FilterState) => {
-    setFilters(newFilters)
-  }, [])
+  // Se o usuário está logado, redireciona para o dashboard
+  if (session?.user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4">Bem-vindo de volta!</h1>
+          <p className="text-xl text-muted-foreground mb-8">
+            Olá, {session.user.name}. Pronto para gerenciar suas finanças?
+          </p>
+          <Link href="/dashboard">
+            <Button size="lg">Ir para Dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
+  // Página inicial para usuários não autenticados
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <DollarSign className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Finance Control</h1>
-                <p className="text-sm text-muted-foreground">
-                  Controle financeiro inteligente
-                </p>
-              </div>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+    <div className="container mx-auto px-4 py-8">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4">Finance Control</h1>
+        <p className="text-xl text-muted-foreground mb-8">
+          Seu sistema moderno de controle e relatório de finanças pessoais
+        </p>
+        <LoginButton />
+      </div>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid gap-8">
-          {/* Upload Section */}
-          <section className="animate-fade-in">
-            <div className="text-center mb-6">
-              <h2 className="text-3xl font-bold mb-2">
-                Importe suas transações
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Faça o upload do seu arquivo OFX para começar a analisar suas finanças. 
-                O sistema irá categorizar automaticamente suas transações e gerar relatórios detalhados.
-              </p>
-            </div>
-            <FileUpload onUploadSuccess={handleUploadSuccess} />
-          </section>
+      <div className="grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Controle Total</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>
+              Gerencie todas as suas transações financeiras em um só lugar
+            </CardDescription>
+          </CardContent>
+        </Card>
 
-          {/* Stats Cards */}
-          <section className="animate-slide-up">
-            <DashboardStats refreshTrigger={refreshTrigger} />
-          </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>Relatórios Detalhados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>
+              Visualize seus gastos e receitas com gráficos e relatórios intuitivos
+            </CardDescription>
+          </CardContent>
+        </Card>
 
-          {/* Filters */}
-          <section className="animate-scale-in">
-            <Filters onFiltersChange={handleFiltersChange} />
-          </section>
-
-          {/* Export Buttons */}
-          <section className="animate-scale-in">
-            <ExportButtons />
-          </section>
-
-          {/* Charts Section */}
-          <section className="animate-scale-in">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <CategoryChart />
-              <MonthlyChart />
-            </div>
-          </section>
-
-          {/* Transactions List */}
-          <section className="animate-scale-in">
-            <TransactionList refreshTrigger={refreshTrigger} />
-          </section>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 mt-16">
-        <div className="container mx-auto px-4 py-6">
-          <div className="text-center text-sm text-muted-foreground">
-            <p>© 2024 Finance Control. Sistema de controle financeiro moderno e intuitivo.</p>
-          </div>
-        </div>
-      </footer>
+        <Card>
+          <CardHeader>
+            <CardTitle>Categorização</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CardDescription>
+              Organize suas finanças por categorias personalizadas
+            </CardDescription>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
