@@ -10,7 +10,7 @@ import { TransactionList } from '@/components/transaction-list'
 import { ExportButtons } from '@/components/export-buttons'
 import { Filters } from '@/components/filters'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { FilterState as FiltersState } from '@/components/filters'
 
@@ -33,7 +33,7 @@ export default function ReportsPage() {
   })
 
   // Função para converter os filtros do componente Filters para o formato esperado pelo TransactionList
-  const handleFiltersChange = (filtersData: FiltersState) => {
+  const handleFiltersChange = useCallback((filtersData: FiltersState) => {
     setFilters({
       startDate: filtersData.startDate,
       endDate: filtersData.endDate,
@@ -41,7 +41,7 @@ export default function ReportsPage() {
       type: filtersData.type,
       description: filtersData.search
     })
-  }
+  }, [])
 
   if (isPending) {
     return (
