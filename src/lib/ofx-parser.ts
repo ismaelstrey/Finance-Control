@@ -19,7 +19,7 @@ export interface ParsedOFXData {
 export function parseOFXFile(ofxContent: string): ParsedOFXData {
   try {
     console.log('🔍 Iniciando parseOFXFile...');
-    
+
     // Primeiro tenta usar a biblioteca ofx-js
     let data;
     try {
@@ -27,7 +27,7 @@ export function parseOFXFile(ofxContent: string): ParsedOFXData {
       data = parse(ofxContent);
       console.log('✅ ofx-js funcionou, dados:', Object.keys(data || {}));
     } catch (error) {
-      console.log('❌ ofx-js falhou, usando parser customizado...');
+      console.log('❌ ofx-js falhou, usando parser customizado...', error);
       data = parseOFXCustom(ofxContent);
     }
 
