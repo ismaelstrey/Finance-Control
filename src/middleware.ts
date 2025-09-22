@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getSessionCookie } from 'better-auth/cookies'
 
 // Rotas que requerem autenticação
 const protectedRoutes = [
   '/dashboard',
   '/profile',
   '/settings',
-  '/transactions'
+  '/transactions',
+  '/reports',
+  '/categories'
 ]
 
 // Rotas que só devem ser acessadas por usuários não autenticados
@@ -18,9 +21,9 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   try {
-    // Verifica apenas a existência do cookie de sessão conforme recomendado pela documentação
-    const sessionCookie = request.cookies.get('better-auth.session_token')
-    const isAuthenticated = !!sessionCookie?.value
+    // Verifica a sessão usando a função do Better Auth
+    const sessionCookie = getSessionCookie(request)
+    const isAuthenticated = !!sessionCookie
 
     const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
     const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))

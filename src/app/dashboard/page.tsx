@@ -1,75 +1,74 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useSession } from '@/lib/auth-client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { FileUpload } from '@/components/file-upload'
-import { DashboardStats } from '@/components/dashboard-stats'
-import Link from 'next/link'
+import { useState } from 'react';
+import { useSession } from '@/lib/auth-client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { FileUpload } from '@/components/file-upload';
+import { DashboardStats } from '@/components/dashboard-stats';
+import { Loader2, Upload, BarChart3, Tags, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { data: session, isPending } = useSession()
-  const [refreshKey, setRefreshKey] = useState(0)
+  const { data: session, isPending } = useSession();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleUploadSuccess = () => {
     // Força a atualização dos componentes que dependem dos dados
-    setRefreshKey(prev => prev + 1)
-  }
+    setRefreshKey(prev => prev + 1);
+  };
 
   if (isPending) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
-    )
+    );
   }
 
-  if (!session?.user) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Acesso Negado</CardTitle>
-            <CardDescription>
-              Você precisa estar logado para acessar esta página.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/login">
-              <Button>Fazer Login</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // Remove the redirect logic - let middleware handle authentication
+  // The middleware will redirect unauthenticated users to login
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Bem-vindo de volta, {session.user.name}!
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-2">
+          Bem-vindo de volta, {session?.user?.name || session?.user?.email}!
         </p>
       </div>
 
-      {/* Upload de OFX */}
+      {/* Upload Section */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Upload de Arquivo OFX
+          </CardTitle>
+          <CardDescription>
+            Faça upload do seu arquivo OFX para importar transações bancárias
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <FileUpload onUploadSuccess={handleUploadSuccess} />
+        </CardContent>
+      </Card>
+
+      {/* Stats Section */}
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Upload de Arquivo OFX</h2>
-        <FileUpload onUploadSuccess={handleUploadSuccess} />
+        <DashboardStats key={refreshKey} />
       </div>
 
-      {/* Estatísticas do Dashboard */}
-      <DashboardStats key={refreshKey} />
-
-      {/* Cards de Navegação */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+      {/* Navigation Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Transações</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Transações
+            </CardTitle>
             <CardDescription>
-              Gerencie suas transações financeiras
+              Visualize e gerencie suas transações importadas
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -79,11 +78,14 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Categorias</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Tags className="h-5 w-5" />
+              Categorias
+            </CardTitle>
             <CardDescription>
-              Organize suas categorias de gastos
+              Organize suas transações por categorias
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -93,11 +95,14 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Relatórios</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Relatórios
+            </CardTitle>
             <CardDescription>
-              Visualize seus dados financeiros
+              Analise seus gastos com gráficos e relatórios
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -108,18 +113,19 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações da Conta</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p><strong>Nome:</strong> {session.user.name}</p>
-            <p><strong>Email:</strong> {session.user.email}</p>
-            <p><strong>ID:</strong> {session.user.id}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Account Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Informações da Conta</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <p><strong>Nome:</strong> {session?.user?.name || 'Não informado'}</p>
+            <p><strong>Email:</strong> {session?.user?.email}</p>
+            <p><strong>Último acesso:</strong> {new Date().toLocaleDateString('pt-BR')}</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
