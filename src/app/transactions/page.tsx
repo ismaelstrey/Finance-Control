@@ -37,6 +37,17 @@ export default function TransactionsPage() {
     description: ''
   })
 
+  // Função para converter os filtros do componente Filters para o formato esperado pelo TransactionList
+  const handleFiltersChange = useCallback((filtersData: FiltersState) => {
+    setFilters({
+      startDate: filtersData.startDate,
+      endDate: filtersData.endDate,
+      category: filtersData.categoryId,
+      type: filtersData.type,
+      description: filtersData.search
+    })
+  }, [])
+
   // Redireciona para login se não estiver autenticado
   if (isPending) {
     return (
@@ -65,17 +76,6 @@ export default function TransactionsPage() {
       </div>
     )
   }
-
-  // Função para converter os filtros do componente Filters para o formato esperado pelo TransactionList
-  const handleFiltersChange = useCallback((filtersData: FiltersState) => {
-    setFilters({
-      startDate: filtersData.startDate,
-      endDate: filtersData.endDate,
-      category: filtersData.categoryId,
-      type: filtersData.type,
-      description: filtersData.search
-    })
-  }, [])
 
   return (
     <div className="container mx-auto p-6 space-y-6">
