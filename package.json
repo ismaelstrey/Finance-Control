@@ -7,7 +7,8 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx tsx seed.ts"
+    "seed": "npx tsx seed.ts",
+    "postinstall": "prisma generate && prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^5.19.1",
@@ -25,11 +26,13 @@
     "better-auth": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "form-data": "^4.0.4",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.544.0",
     "multer": "^2.0.2",
     "next": "15.5.3",
     "next-themes": "^0.4.6",
+    "node-fetch": "^3.3.2",
     "ofx-js": "^0.2.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",

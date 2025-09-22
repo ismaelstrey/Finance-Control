@@ -1,7 +1,6 @@
 'use client'
 
 import { useSession } from '@/lib/auth-client'
-import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { TransactionList } from '@/components/transaction-list'
 import { Filters } from '@/components/filters'

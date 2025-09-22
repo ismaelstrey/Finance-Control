@@ -54,16 +54,16 @@ export async function GET(request: NextRequest) {
       // Estatísticas mensais
       prisma.$queryRaw`
         SELECT 
-          strftime('%Y-%m-01', date) as month,
+          to_char(date_trunc('month', date), 'YYYY-MM-DD') as month,
           SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as income,
           SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as expenses,
           COUNT(*) as transaction_count
-        FROM transactions 
+        FROM "transactions" 
         ${Object.keys(dateFilter).length > 0 ?
           Prisma.sql`WHERE date >= ${dateFilter.gte || new Date('1900-01-01')} 
            AND date <= ${dateFilter.lte || new Date('2100-12-31')}` :
           Prisma.empty}
-        GROUP BY strftime('%Y-%m', date)
+        GROUP BY date_trunc('month', date)
         ORDER BY month DESC
         LIMIT 12
       `,

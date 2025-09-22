@@ -18,20 +18,34 @@ export interface ParsedOFXData {
 
 export function parseOFXFile(ofxContent: string): ParsedOFXData {
   try {
+    console.log('🔍 Iniciando parseOFXFile...');
+
     // Primeiro tenta usar a biblioteca ofx-js
     let data;
     try {
+      console.log('📚 Tentando usar biblioteca ofx-js...');
       data = parse(ofxContent);
-    } catch {
+      console.log('✅ ofx-js funcionou, dados:', Object.keys(data || {}));
+    } catch (error) {
+      console.log('❌ ofx-js falhou, usando parser customizado...', error);
       data = parseOFXCustom(ofxContent);
     }
 
     // Se o parse retornou vazio, tenta o parser customizado
     if (!data || Object.keys(data).length === 0) {
+      console.log('⚠ Dados vazios, tentando parser customizado...');
       data = parseOFXCustom(ofxContent);
     }
 
-    // Extrair informações da conta
+    console.log('📊 Dados após parse:', data);
+
+    // Se data é do parser customizado, retorna diretamente
+    if (data && data.transactions && Array.isArray(data.transactions)) {
+      console.log('✅ Usando dados do parser customizado');
+      return data;
+    }
+
+    // Extrair informações da conta (para dados da biblioteca ofx-js)
     const accountId = data.OFX?.CREDITCARDMSGSRSV1?.CCSTMTTRNRS?.CCSTMTRS?.CCACCTFROM?.ACCTID ||
       data.OFX?.BANKMSGSRSV1?.STMTTRNRS?.STMTRS?.BANKACCTFROM?.ACCTID ||
       'unknown';
@@ -59,6 +73,8 @@ export function parseOFXFile(ofxContent: string): ParsedOFXData {
         amount: parseFloat(trn.TRNAMT || '0'),
         type: trn.TRNTYPE || 'OTHER'
       }));
+
+    console.log(`✅ Processadas ${transactions.length} transações`);
 
     return {
       transactions,
