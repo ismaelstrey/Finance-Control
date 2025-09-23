@@ -1,23 +1,13 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react'
-
-interface Transaction {
-  id: string
-  date: string
-  description: string
-  amount: number
-  type: string
-  category?: {
-    id: string
-    name: string
-  }
-}
+import { useTransactions } from '@/hooks/use-transactions'
+import { useEffect } from 'react'
+import { TransformEffect } from 'html2canvas/dist/types/render/effects'
 
 interface FilterState {
   startDate: string
@@ -33,53 +23,23 @@ interface TransactionListProps {
 }
 
 export function TransactionList({ refreshTrigger, filters }: TransactionListProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-
-  const fetchTransactions = useCallback(async (page = 1) => {
-    try {
-      setLoading(true)
-      
-      // Construir query params com filtros
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '20'
-      })
-      
-      if (filters) {
-        if (filters.startDate) params.append('startDate', filters.startDate)
-        if (filters.endDate) params.append('endDate', filters.endDate)
-        if (filters.category && filters.category !== 'all') params.append('categoryId', filters.category)
-        if (filters.type && filters.type !== 'all') params.append('type', filters.type)
-        if (filters.description) params.append('search', filters.description)
-      }
-      
-      const response = await fetch(`/api/transactions?${params.toString()}`)
-      const data = await response.json()
-      
-      if (data.success) {
-        setTransactions(data.transactions)
-        setCurrentPage(data.currentPage)
-        setTotalPages(data.totalPages)
-      }
-    } catch (error) {
-      console.error('Erro ao buscar transações:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [filters])
-
+  // Usando o hook personalizado para gerenciar transações
+  const {
+    transactions,
+    loading,
+    currentPage,
+    totalPages,
+    handlePageChange,
+    fetchTransactions
+  } = useTransactions({
+    refreshTrigger,
+    filters
+  })
   useEffect(() => {
-    fetchTransactions(1)
-  }, [refreshTrigger, fetchTransactions])
+    fetchTransactions()
+  }, [filters, fetchTransactions])
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      fetchTransactions(page)
-    }
-  }
+  console.log(transactions)
 
   if (loading) {
     return (
@@ -115,11 +75,10 @@ export function TransactionList({ refreshTrigger, filters }: TransactionListProp
                   className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${
-                      transaction.amount > 0 
-                        ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400' 
-                        : 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400'
-                    }`}>
+                    <div className={`p-2 rounded-full ${transaction.amount > 0
+                      ? 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                      : 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+                      }`}>
                       {transaction.amount > 0 ? (
                         <TrendingUp className="w-4 h-4" />
                       ) : (
@@ -141,9 +100,8 @@ export function TransactionList({ refreshTrigger, filters }: TransactionListProp
                       </div>
                     </div>
                   </div>
-                  <div className={`font-semibold ${
-                    transaction.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-                  }`}>
+                  <div className={`font-semibold ${transaction.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    }`}>
                     {formatCurrency(transaction.amount)}
                   </div>
                 </div>
@@ -161,11 +119,11 @@ export function TransactionList({ refreshTrigger, filters }: TransactionListProp
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   Anterior
                 </Button>
-                
+
                 <span className="text-sm text-muted-foreground">
                   Página {currentPage} de {totalPages}
                 </span>
-                
+
                 <Button
                   variant="outline"
                   size="sm"

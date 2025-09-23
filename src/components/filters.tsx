@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Filter, X } from 'lucide-react'
+import { useCategories } from '@/hooks/use-categories'
 
 interface Category {
   id: string
@@ -32,7 +33,7 @@ export interface FilterState {
 }
 
 export function Filters({ onFiltersChange }: FiltersProps) {
-  const [categories, setCategories] = useState<Category[]>([])
+
   const [filters, setFilters] = useState<FilterState>({
     startDate: '',
     endDate: '',
@@ -40,19 +41,7 @@ export function Filters({ onFiltersChange }: FiltersProps) {
     type: 'all',
     search: ''
   })
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories')
-      const data = await response.json()
-
-
-      if (response.ok) {
-        setCategories(data)
-      }
-    } catch (error) {
-      console.error('Erro ao buscar categorias:', error)
-    }
-  }
+  const { categories, fetchCategories, loading } = useCategories()
 
   useEffect(() => {
     fetchCategories()
@@ -81,6 +70,9 @@ export function Filters({ onFiltersChange }: FiltersProps) {
   const hasActiveFilters = Object.values(filters).some(value =>
     value !== '' && value !== 'all'
   )
+  if (loading) {
+    return <div className='text-center animate-pulse'>Carregando categorias...</div>
+  }
 
   return (
     <Card>

@@ -32,6 +32,7 @@ export default function ReportsPage() {
     description: ''
   })
 
+
   // Função para converter os filtros do componente Filters para o formato esperado pelo TransactionList
   const handleFiltersChange = useCallback((filtersData: FiltersState) => {
     setFilters({
