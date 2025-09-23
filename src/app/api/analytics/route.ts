@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -89,11 +88,11 @@ export async function GET(request: NextRequest) {
 
     // Buscar informações das categorias
     const categories = await prisma.category.findMany();
-    const categoryMap = new Map(categories.map(cat => [cat.id, cat.name]));
+    const categoryMap = new Map(categories.map((cat: { id: string; name: string }) => [cat.id, cat.name]));
 
     // Processar estatísticas por categoria
     const categoryStatsWithNames = await Promise.all(
-      categoryStats.map(async (stat) => {
+      categoryStats.map(async (stat: { categoryId: string | null; _sum: { amount: number | null }; _count: number }) => {
         const categoryName = stat.categoryId ? categoryMap.get(stat.categoryId) : 'Sem categoria';
         return {
           categoryId: stat.categoryId,
@@ -140,7 +139,7 @@ export async function GET(request: NextRequest) {
         expenses: bigint | null;
         transaction_count: bigint;
       }>),
-      recentTransactions: recentTransactions.map(transaction => ({
+      recentTransactions: recentTransactions.map((transaction: { amount: number; [key: string]: any }) => ({
         ...transaction,
         amount: Number(transaction.amount)
       }))

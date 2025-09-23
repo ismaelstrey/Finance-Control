@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,17 +8,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Filter, X } from 'lucide-react'
 import { useCategories } from '@/hooks/use-categories'
-
-interface Category {
-  id: string
-  name: string
-  color: string
-  description?: string
-  updatedAt: string
-  _count: {
-    transactions: number
-  }
-}
 
 interface FiltersProps {
   onFiltersChange: (filters: FilterState) => void
@@ -43,9 +32,13 @@ export function Filters({ onFiltersChange }: FiltersProps) {
   })
   const { categories, fetchCategories, loading } = useCategories()
 
-  useEffect(() => {
+  const memoizedFetchCategories = useCallback(() => {
     fetchCategories()
-  }, [])
+  }, [fetchCategories])
+
+  useEffect(() => {
+    memoizedFetchCategories()
+  }, [memoizedFetchCategories])
 
   useEffect(() => {
     onFiltersChange(filters)
