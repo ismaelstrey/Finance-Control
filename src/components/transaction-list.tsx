@@ -6,8 +6,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react'
 import { useTransactions } from '@/hooks/use-transactions'
-import { useEffect } from 'react'
-import { TransformEffect } from 'html2canvas/dist/types/render/effects'
 
 interface FilterState {
   startDate: string
@@ -29,17 +27,12 @@ export function TransactionList({ refreshTrigger, filters }: TransactionListProp
     loading,
     currentPage,
     totalPages,
-    handlePageChange,
-    fetchTransactions
+    handlePageChange
   } = useTransactions({
     refreshTrigger,
     filters
   })
-  useEffect(() => {
-    fetchTransactions()
-  }, [filters, fetchTransactions])
 
-  console.log(transactions)
 
   if (loading) {
     return (
